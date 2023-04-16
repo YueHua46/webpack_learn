@@ -15,13 +15,11 @@ const config = {
   // 写入module配置  
   module:{
     rules:[
-      // 新增css-loader规则
       {
-        test:/\.css$/, // 写入regexp匹配规则，指定loader应用的模块
+        test:/\.md$/,
         use:[
-          'style-loader',
-          'css-loader'
-        ] // 指定使用的loader
+          path.join(__dirname,'./markdown-loader.js')
+        ]
       }
     ]
   }

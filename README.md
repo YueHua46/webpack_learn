@@ -1,76 +1,56 @@
-# 第三讲：Webpack是如何通过Loader来实现特殊资源加载的？
-Webpack不仅是JavaScript模块打包工具
-还是整个前端项目的模块打包工具
-可以通过webpack去管理前端项目中的任意类型的资源文件
-而这个功能实现的核心便是`Loader`机制
+# 自定义markdown-loader
 
-## webpack只认识js，不认识css
-首先在我们的src目录下新建一个样式文件`main.css`
-然后写入以下内容：
+## 安装marked包
+这个包的用途是将我们的markdown字符转换为对应的html格式
+以便我们能够插入到html中
+> npm i marked --save-dev
+  or yarn add marked -D
 
-```css
-body {
-  margin: 0 auto;
-  padding: 0 20px;
-  max-width: 800px;
-  background-color: #f4f8fd;
+## 新建一个markdown-loader
+### 新建一个markdown-loader.js文件在根目录下
+然后键入如下代码：
+
+```js
+// 导入marked来解析markdown字符串为html
+const {marked} = require('marked')
+
+module.exports = source => {
+  console.log(source)
+  const markHtml = marked(source)
+  // 通过JSON.stringify的功能将markHtml的一些特殊格式转换为对应的JS代码
+  const markJs = JSON.stringify(markHtml)
+  // 返回的内容将交给下一个loader处理，直到最后的default-loader处理后再打包到最终build里
+  return `export default ${markJs}`
 }
 ```
-webpack在打包时默认只认识js，而不认识css，所以如果将`main.css`作为入口文件
-则在打包时，`main.css`的第一行就会报错
 
-```
-asset bundle.js 766 bytes [emitted] (name: main)
-./src/main.css 99 bytes [built] [code generated] [1 error]
+### 在src中新建入口md文件`md.md`并写入以下内容
 
-ERROR in ./src/main.css 1:5
-Module parse failed: Unexpected token (1:5)
-You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
-> body {
-|   margin: 0 auto;
-|   padding: 0 20px;
+```md
+# markdown-loader
 
-webpack 5.79.0 compiled with 1 error in 75 ms
-```
-而将`main.css`中的css样式去掉，并换为`javascript`所认识的`console.log`方法
-那么你会发现这时便可以正常打包了
-```css
-console.log('hello world')
-/* body {
-  margin: 0 auto;
-  padding: 0 20px;
-  max-width: 800px;
-  background-color: #f4f8fd;
-} */
-```
-执行`webpack`命令打包后结果：
-```
-asset bundle.js 217 bytes [emitted] (name: main)
-./src/main.css 133 bytes [built] [code generated]
-webpack 5.79.0 compiled successfully in 57 ms
+这是一个markdown的loader加载器
 ```
 
-这明显的说明了`webpack`只认识`js`模块，而不认识`css`模块
+### 然后在src下新建入口文件`index.js`
 
-那么`webpack`的`Loader`是如何处理所有模块的呢？看下图
+该入口文件引入md文件，并将其签入到html中
 
-![https://sears-2000.oss-cn-shanghai.aliyuncs.com/webpack_learn_public/QTW7MH7Y%5DEE627%7EX38M1%5D%5BJ.png](https://sears-2000.oss-cn-shanghai.aliyuncs.com/webpack_learn_public/QTW7MH7Y%5DEE627%7EX38M1%5D%5BJ.png)
+```js
+import mdHtml from "./md.md"
+console.log('mdHtml',);
 
-对于default Loader（webpack内置），它只认识js，而对于其他Loader（如cssLoader）那么就是专门处理css模块的
+const mdDiv = document.createElement('div')
+mdDiv.innerHTML = mdHtml
 
-## css-loader
+document.body.appendChild(mdDiv)
+```
 
-那么如果想要处理css模块，那么就需要css-loader
+所以我们需要将Markdown转换为对应的html结构然后嵌入到网页中
 
-### 安装css-loader
+### webpack.config.js配置
 
-> npm i css-loader --save-dev
->
-> #or yarn add css-loader -dev
-
-然后在`webpack.config.js`中如下配置：
-
-```javascript
+```js
 const {Configuration} = require('webpack')
 const path = require('node:path')
 
@@ -78,7 +58,7 @@ const path = require('node:path')
  * @type {Configuration}
  */
 const config = {
-  entry:'./src/main.css',
+  entry:'./src/index.js',
   mode:'none',
   output:{
     clean:true,
@@ -88,10 +68,11 @@ const config = {
   // 写入module配置  
   module:{
     rules:[
-      // 新增css-loader规则
       {
-        test:/\.css$/, // 写入regexp匹配规则，指定loader应用的模块
-        use:'css-loader' // 指定使用的loader
+        test:/\.md$/,
+        use:[
+          path.join(__dirname,'./markdown-loader.js')
+        ]
       }
     ]
   }
@@ -100,43 +81,4 @@ const config = {
 module.exports = config
 ```
 
-但此时我们在页面中会发现效果并没有实现，这是为什么呢？
-
-## style-loader
-
-因为我们通过源码可以发现，css-loader实际就是将我们的css样式转换为对应的字符串，然后将它push到exports导出中，但是它并没有被应用到任何地方。如果我们要将这个导出应用到html中，我们还需要`style-loader`来将css样式以`<style></style>`标签的形式嵌入到html中。
-
-### 安装style-loader
-
-> npm i style-loader --save-dev
->
-> or yarn add style-loader -D
-
-### 应用到webpack.config.js中
-
-```js
-  const config = {
-      ...
-      module:{
-        rules:[
-          // 新增css-loader规则
-          {
-            test:/\.css$/, // 写入regexp匹配规则，指定loader应用的模块
-            use:[ // 指定使用的loader
-              'style-loader', 
-              'css-loader'
-            ] 
-          }
-        ]
-      }
-      ...
-  }
-```
-
-注意，此时的use则是一个数组，其应用的顺序是从下至上，所以我们需要先通过`css-loader`处理后再通过`style-loader`嵌入到html
-
-此时再次敲：webpack来打包时，则发现样式被嵌入到html中了
-
-## 入口文件基本都用js作为入口
-
-注意：通常我们都需要将入口文件定义为js文件，这样由js来导入其他各种各样的模块是我们所应该做的，这是为了确保我们的执行流程整体上看是一条线而不是多条线。
+这时当我们import md文件时，就会通过markdown-loader来处理该md文件，该md文件会被转换为对应的html结构并默认导出，所以我们在index.js中只需要默认导入即可拿到数据

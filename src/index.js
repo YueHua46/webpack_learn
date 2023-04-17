@@ -1,7 +1,5 @@
-import mdHtml from "./md.md"
-console.log('mdHtml',);
+import logB from './test'
 
-const mdDiv = document.createElement('div')
-mdDiv.innerHTML = mdHtml
+console.log('去掉build后的前排注释')
 
-document.body.appendChild(mdDiv)
+logB()

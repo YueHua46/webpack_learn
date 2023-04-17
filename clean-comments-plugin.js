@@ -1,9 +1,3 @@
-# 自定义plugin去掉build后的前排注释
-
-## 在任意目录下定义plugin的js文件
-写入如下内容
-```js
-// clean-comments-plugin.js
 const pluginName = 'cleanCommentsPlugin'
 const {WebpackPluginInstance} = require('webpack')
 /**
@@ -43,33 +37,3 @@ class cleanCommentsPlugin {
 }
 
 module.exports = cleanCommentsPlugin
-```
-详细的功能说明已经写了注释
-可以看见，对于一个plugin插件，它应当是一个`class`类并包含一个`apply`方法
-这个方法能够接受到一个`compiler`对象，它是构建webpack的主要工具
-通过挂载该对象的`emit`这个hook，我们可以在其中接收到即将向输出目录输出文件的模块
-
-
-然后我们对该模块进行简单解析后再对其进行相应处理，这里我们是对所有js文件的前排注释
-进行了一个清除。然后通过以下方式让模块的更改生效：
-```js
-compilation.assets[name] = {
-  source:()=> source,
-  size:()=> source.length
-}
-```
-最后在导出这个`plugin`
-
-## 挂载到webpack
-我们通过以下方式来将该plugin挂载到`webpack`中
-```js
-const cleanCommentsPlugin = require('./clean-comments-plugin')
-
-module.exports = {
-  ... // 省略
-  plugins: [
-    new cleanCommentsPlugin()
-  ]
-  ... // 省略
-}
-```

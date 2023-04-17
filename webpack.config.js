@@ -1,5 +1,9 @@
 const {Configuration} = require('webpack')
 const path = require('node:path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyPlugin = require('copy-webpack-plugin')
+const logPluginPlugin = require('./log-run-plugin')
+const cleanCommentsPlugin = require('./clean-comments-plugin')
 
 /*** 
  * @type {Configuration}
@@ -12,17 +16,16 @@ const config = {
     path:path.join(__dirname,'./build'),
     filename:`bundle.js`
   },
-  // 写入module配置  
-  module:{
-    rules:[
-      {
-        test:/\.md$/,
-        use:[
-          path.join(__dirname,'./markdown-loader.js')
-        ]
-      }
-    ]
-  }
+  plugins:[
+    new HtmlWebpackPlugin({title:'webpack-learn',template:path.join(__dirname,'./index.html')}),
+    new logPluginPlugin(),
+    new cleanCommentsPlugin(),
+    new CopyPlugin({
+      patterns: [
+        { from: "public", to: "public" },
+      ],
+    }),
+  ]
 }
 
 module.exports = config

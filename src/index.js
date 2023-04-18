@@ -1,5 +1,3 @@
-import logB from './test'
+console.log("watch 监听模式");
 
-console.log('去掉build后的前排注释')
-
-logB()
+console.log('build')

@@ -35,6 +35,9 @@ webpack提供了一个开发服务器能够使用其所提供的devServer
 webpacK-dev-server默认会将构建结果和输出文件全部作为开发服务器的资源文件
 只要通过webpack打包能够输出的文件都可以直接被访问到
 
+### 安装devServer
+> npm i webpack-dev-server --save-d
+
 ### devServer配置如下
 ```js
 // webpack.config.js

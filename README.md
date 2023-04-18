@@ -36,7 +36,7 @@ webpacK-dev-server默认会将构建结果和输出文件全部作为开发服�
 只要通过webpack打包能够输出的文件都可以直接被访问到
 
 ### 安装devServer
-> npm i webpack-dev-server --save-d
+> npm i webpack-dev-server --save-dev
 
 ### devServer配置如下
 ```js
